@@ -75,8 +75,6 @@ def evaluate_model(model, test_loader):
             total += labels.size(0)
             running_corrects += (predicted == labels).sum().item()
 
-            print(f"Progress: {total}/7390")
-
     accuracy = running_corrects / total
     print(f"Accuracy: {accuracy:.4f}")
 
