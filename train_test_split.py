@@ -1,21 +1,37 @@
 import os
+import shutil
 import numpy as np
 from sklearn.model_selection import train_test_split
 
 # Define source folder and target train/test folders
-source_folder = 'images'
-train_folder = 'train'
-test_folder = 'test'
+source_folder = "images"
+destination_folder = "images2"
+train_folder = "train"
+test_folder = "test"
 
 # Create train and test folders if they don't exist
 os.makedirs(train_folder, exist_ok=True)
 os.makedirs(test_folder, exist_ok=True)
 
+# Get class names
+classes = set()
 for _, cls in enumerate(os.listdir(source_folder)):
     cls = cls.split("_")[:-1]
     cls = ' '.join(cls)
-    print(cls)
+    classes.add(cls)
 
+# Create folders for each class name
+for cls in classes:
+    os.makedirs(os.path.join(destination_folder, cls), exist_ok=True)
+    
+# Copy images into the respective folder
+os.makedirs(destination_folder, exist_ok=True)
+for filename in os.listdir(source_folder):
+    source_path = os.path.join(source_folder, filename)
+    destination_path = os.path.join(destination_folder, " ".join(filename.split("_")[:-1]), filename)
+
+    if os.path.isfile(source_path):
+        shutil.copy(source_path, destination_path)
 
 """
 # Assume that each image filename includes the class name (you can adjust this depending on your setup)
