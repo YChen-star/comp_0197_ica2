@@ -25,12 +25,11 @@ train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
 model = models.alexnet(pretrained=True)
-model.to(device)
 
 # Modify the final fully connected layer (classifier) to match the number of classes in the Oxford-IIIT Pet Dataset (37 classes)
 num_ftrs = model.classifier[6].in_features  # Get the number of input features to the last fully connected layer
 model.classifier[6] = nn.Linear(num_ftrs, len(train_dataset.classes))  # Update to match number of classes
-
+model.to(device)
 
 # Training loop
 def train_model(model, num_epochs=1, lr=1e-3):
@@ -80,7 +79,7 @@ def evaluate_model(model, test_loader):
 
 
 # Train the model
-train_model(model, num_epochs=1)
+train_model(model, num_epochs=10)
 
 # Evaluate the model
 evaluate_model(model, test_loader)
