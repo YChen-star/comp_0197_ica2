@@ -142,7 +142,7 @@ def collate_fn(batch):
 ##############################
 # 4) ADVANCED BOX SUP FUNCTIONS
 ##############################
-def run_selective_search(pil_img):
+ def run_selective_search(pil_img):
     """
     Run selective search on the input PIL image to generate region proposals.
     Returns a list of proposals as tuples (x1, y1, x2, y2).
@@ -150,14 +150,17 @@ def run_selective_search(pil_img):
     np_img = np.array(pil_img)  # Convert image to NumPy array (H,W,3)
     # Run selective search with moderate settings: scale=1.0, min_size=20
     _, proposals = selectivesearch.selective_search(np_img, scale=1.0, min_size=20)
-    boxes = []
+    boxes = set()
     for r in proposals:
         # Each proposal's 'rect' is in the format (y, x, height, width)
         y, x, h, w = r['rect']
+        if h == 0 or w == 0:
+            continue
         x1, y1 = x, y
         x2, y2 = x + w, y + h
-        boxes.append((x1, y1, x2, y2))
-    return boxes
+        boxes.add((x1, y1, x2, y2))
+    return list(boxes)
+
 
 def union_of_bboxes(boxes, H, W):
     """
@@ -209,8 +212,12 @@ def apply_crf(img_tensor, mask_tensor, n_iter=5):
     prob_bg = 1 - prob_fg
     prob_2 = np.stack([prob_bg, prob_fg], axis=0)  # Shape: (2,H,W)
     unary = unary_from_softmax(prob_2)
+    
+    mean = torch.tensor([0.485, 0.456, 0.406], device=img_tensor.device).view(3, 1, 1)
+    std = torch.tensor([0.229, 0.224, 0.225], device=img_tensor.device).view(3, 1, 1)
+    img_tensor_raw = img_tensor * std + mean
     # Convert image tensor to a NumPy array (H,W,3) for CRF.
-    img_np = (img_tensor * 255).byte().permute(1, 2, 0).cpu().numpy()
+    img_np = (img_tensor_raw.clamp(0, 1) * 255).byte().permute(1, 2, 0).cpu().numpy()
 
     d = dcrf.DenseCRF2D(W, H, 2)
     d.setUnaryEnergy(unary)
